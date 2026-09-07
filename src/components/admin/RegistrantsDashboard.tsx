@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import type { Registrant, RegistrantInput, RegistrantWithTournament } from "@/lib/types";
+import type { RegistrantInput, RegistrantWithTournament } from "@/lib/types";
+import { manualRegisterAction } from "@/app/admin/registrants/actions";
 import { SiteHeader } from "../SiteHeader";
 import { ManualRegistrationModal } from "./ManualRegistrationModal";
 
@@ -41,21 +42,11 @@ export function RegistrantsDashboard({
     tournamentId: string,
     input: RegistrantInput
   ): Promise<string | void> {
-    const res = await fetch("/api/admin/registrants", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tournamentId, ...input }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      return body.error ?? "L'inscription a échoué.";
+    const result = await manualRegisterAction(tournamentId, input);
+    if ("error" in result) {
+      return result.error;
     }
-    const tournament = (await res.json()) as {
-      id: string;
-      name: string;
-      date: string;
-      registrants: Registrant[];
-    };
+    const { tournament } = result;
     const created = tournament.registrants[tournament.registrants.length - 1];
     setRegistrants((prev) => [
       {
