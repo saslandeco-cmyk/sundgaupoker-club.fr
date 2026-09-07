@@ -57,9 +57,21 @@ export function SiteHeader({ active }: { active: "/tournois" | "/admin" }) {
     };
   }, [open]);
 
+  function navItemClass(link: (typeof NAV_LINKS)[number], variant: "inline" | "dropdown") {
+    const isActive = link.href === active && link.label === "Tournois";
+    if (variant === "inline") {
+      return `border-b-2 pb-1 text-sm font-semibold text-text transition-opacity hover:opacity-80 ${
+        isActive ? "border-accent" : "border-transparent"
+      }`;
+    }
+    return `block px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-[var(--surface-soft)] ${
+      isActive ? "text-accent" : "text-text"
+    }`;
+  }
+
   return (
     <header className="border-b border-[var(--border)] bg-[var(--surface)]">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 px-6 py-4 sm:px-8">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-6 py-4 sm:px-8">
         <Link href="/tournois" className="flex shrink-0 items-center">
           <Image
             src="/images/logo.png"
@@ -70,7 +82,31 @@ export function SiteHeader({ active }: { active: "/tournois" | "/admin" }) {
           />
         </Link>
 
-        <div className="relative" ref={menuRef}>
+        {/* PC (lg et plus) : chaque lien affiché en ligne, comme avant. */}
+        <nav className="hidden flex-wrap items-center gap-x-6 gap-y-2 lg:flex">
+          {NAV_LINKS.map((link) =>
+            link.external ? (
+              <a
+                key={link.label}
+                href={link.href}
+                className={navItemClass(link, "inline")}
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                key={link.label}
+                href={link.href}
+                className={navItemClass(link, "inline")}
+              >
+                {link.label}
+              </Link>
+            )
+          )}
+        </nav>
+
+        {/* Mobile et tablette (moins de lg) : menu déroulant compact. */}
+        <div className="relative lg:hidden" ref={menuRef}>
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -84,35 +120,27 @@ export function SiteHeader({ active }: { active: "/tournois" | "/admin" }) {
 
           {open && (
             <nav className="absolute top-full left-0 z-50 mt-2 w-64 overflow-hidden rounded-md border border-[var(--border)] bg-surface py-1.5 shadow-xl">
-              {NAV_LINKS.map((link) => {
-                const isActive =
-                  link.href === active && link.label === "Tournois";
-                const itemClass = `block px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-[var(--surface-soft)] ${
-                  isActive ? "text-accent" : "text-text"
-                }`;
-                if (link.external) {
-                  return (
-                    <a
-                      key={link.label}
-                      href={link.href}
-                      className={itemClass}
-                      onClick={() => setOpen(false)}
-                    >
-                      {link.label}
-                    </a>
-                  );
-                }
-                return (
+              {NAV_LINKS.map((link) =>
+                link.external ? (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    className={navItemClass(link, "dropdown")}
+                    onClick={() => setOpen(false)}
+                  >
+                    {link.label}
+                  </a>
+                ) : (
                   <Link
                     key={link.label}
                     href={link.href}
-                    className={itemClass}
+                    className={navItemClass(link, "dropdown")}
                     onClick={() => setOpen(false)}
                   >
                     {link.label}
                   </Link>
-                );
-              })}
+                )
+              )}
             </nav>
           )}
         </div>
