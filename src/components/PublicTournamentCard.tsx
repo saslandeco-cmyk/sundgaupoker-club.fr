@@ -31,7 +31,7 @@ export function PublicTournamentCard({
 
   return (
     <article className="rise-in flex flex-col overflow-hidden rounded-md border border-white bg-surface">
-      <div className="relative h-36 w-full">
+      <div className="relative h-36 w-full border-b border-[var(--border)]">
         <Image
           src="/images/tournament-banner.jpg"
           alt=""
@@ -51,7 +51,7 @@ export function PublicTournamentCard({
           {tournament.name}
         </h3>
 
-        <hr className="border-t border-[var(--border)]" />
+        <hr className="border-t border-gray-300" />
 
         {tournament.description && (
           <p className="clamp-3 text-sm text-text-soft">
@@ -104,7 +104,7 @@ export function PublicTournamentCard({
               )}
             </div>
           </div>
-          <hr className="border-t border-[var(--border)]" />
+          <hr className="border-t border-gray-300" />
           <span className="flex items-center gap-2">
             <SeatIcon className="h-4 w-4 shrink-0 text-text-soft" />
             {remaining <= 0
