@@ -6,6 +6,7 @@ import type {
   RegistrantInput,
 } from "@/lib/types";
 import { getStatus } from "@/lib/types";
+import { registerForTournamentAction } from "@/app/tournois/actions";
 import { SiteHeader } from "./SiteHeader";
 import { PublicTournamentCard } from "./PublicTournamentCard";
 import { RegistrationModal } from "./RegistrationModal";
@@ -37,18 +38,12 @@ export function PublicBoard({
     tournamentId: string,
     input: RegistrantInput
   ): Promise<string | void> {
-    const res = await fetch(`/api/tournaments/${tournamentId}/registrants`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      return body.error ?? "L'inscription a échoué.";
+    const result = await registerForTournamentAction(tournamentId, input);
+    if ("error" in result) {
+      return result.error;
     }
-    const updated = (await res.json()) as PublicTournament;
     setTournaments((prev) =>
-      prev.map((t) => (t.id === updated.id ? updated : t))
+      prev.map((t) => (t.id === result.tournament.id ? result.tournament : t))
     );
   }
 
