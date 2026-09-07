@@ -1,34 +1,30 @@
 "use server";
 
-import { isAdminAuthenticated } from "@/lib/auth";
-import { addManualRegistrant, type ManualRegisterError } from "@/lib/store";
+import { addRegistrant, type RegisterError } from "@/lib/store";
 import { notify } from "@/lib/notify";
-import type { RegistrantInput, Tournament } from "@/lib/types";
+import { toPublicTournament } from "@/lib/types";
+import type { PublicTournament, RegistrantInput } from "@/lib/types";
 
-const ERROR_MESSAGES: Record<ManualRegisterError, string> = {
+const ERROR_MESSAGES: Record<RegisterError, string> = {
   not_found: "Tournoi introuvable.",
   closed: "Ce tournoi est déjà passé.",
   full: "Ce tournoi est complet.",
-  invalid_input: "Le tournoi, le prénom et le nom sont obligatoires.",
+  offline_only: "L'inscription en ligne n'est pas activée pour ce tournoi.",
+  invalid_input: "Le prénom, le nom et une adresse email valide sont obligatoires.",
   already_registered: "Cette personne est déjà inscrite à ce tournoi.",
 };
 
 /**
- * Server Action appelée par le tableau de bord admin pour inscrire
- * manuellement une personne. Vérifie elle-même la session admin (une
- * Server Action est un point d'entrée public au même titre qu'une route
- * API : elle doit toujours revalider les droits, jamais faire confiance à
- * l'interface qui l'appelle). Notifie ensuite via `notify()`.
+ * Server Action appelée par la modale d'inscription publique. Enregistre
+ * l'inscription puis notifie l'administrateur et la personne inscrite via
+ * `notify()`, sans jamais faire échouer l'inscription à cause d'un souci
+ * d'email.
  */
-export async function manualRegisterAction(
+export async function registerForTournamentAction(
   tournamentId: string,
   input: RegistrantInput
-): Promise<{ tournament: Tournament } | { error: string }> {
-  if (!(await isAdminAuthenticated())) {
-    return { error: "Accès réservé aux organisateurs. Veuillez vous connecter." };
-  }
-
-  const result = await addManualRegistrant(tournamentId, input);
+): Promise<{ tournament: PublicTournament } | { error: string }> {
+  const result = await addRegistrant(tournamentId, input);
 
   if ("error" in result) {
     return { error: ERROR_MESSAGES[result.error] };
@@ -36,5 +32,5 @@ export async function manualRegisterAction(
 
   await notify({ tournament: result.tournament, registrant: result.registrant });
 
-  return { tournament: result.tournament };
+  return { tournament: toPublicTournament(result.tournament) };
 }

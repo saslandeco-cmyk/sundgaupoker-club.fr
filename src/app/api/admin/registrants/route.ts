@@ -6,7 +6,7 @@ import {
   type ManualRegisterError,
 } from "@/lib/store";
 import type { RegistrantInput } from "@/lib/types";
-import { notifyNewRegistration } from "@/lib/notifications";
+import { notify } from "@/lib/notify";
 
 const ERROR_MESSAGES: Record<
   ManualRegisterError,
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message }, { status });
   }
 
-  notifyNewRegistration(result.tournament, result.registrant);
+  await notify({ tournament: result.tournament, registrant: result.registrant });
 
   return NextResponse.json(result.tournament, { status: 201 });
 }

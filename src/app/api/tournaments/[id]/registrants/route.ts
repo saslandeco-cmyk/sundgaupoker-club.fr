@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addRegistrant, type RegisterError } from "@/lib/store";
 import { toPublicTournament, type RegistrantInput } from "@/lib/types";
-import { notifyNewRegistration } from "@/lib/notifications";
+import { notify } from "@/lib/notify";
 
 const ERROR_MESSAGES: Record<RegisterError, { status: number; message: string }> = {
   not_found: { status: 404, message: "Tournoi introuvable." },
@@ -40,7 +40,7 @@ export async function POST(
     return NextResponse.json({ error: message }, { status });
   }
 
-  notifyNewRegistration(result.tournament, result.registrant);
+  await notify({ tournament: result.tournament, registrant: result.registrant });
 
   return NextResponse.json(toPublicTournament(result.tournament), {
     status: 201,
