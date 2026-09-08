@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { readTournaments } from "@/lib/store";
 import { toPublicTournament } from "@/lib/types";
-import { isSiteAuthenticated } from "@/lib/site-access";
 import { PublicBoard } from "@/components/PublicBoard";
-import { SiteAccessGate } from "@/components/SiteAccessGate";
 
 export const metadata: Metadata = {
   robots: {
@@ -18,10 +16,6 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function TournoisPage() {
-  if (!(await isSiteAuthenticated())) {
-    return <SiteAccessGate />;
-  }
-
   const tournaments = await readTournaments();
   return (
     <PublicBoard initialTournaments={tournaments.map(toPublicTournament)} />
