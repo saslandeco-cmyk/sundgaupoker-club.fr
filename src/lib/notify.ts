@@ -10,10 +10,10 @@ function tournamentSummaryLines(tournament: Tournament): string[] {
     `Lieu : ${tournament.venue}`,
   ];
   if (tournament.startTime) lines.push(`${tournament.startTime}`);
-  if (tournament.startingStack) lines.push(`Stack de départ : ${tournament.startingStack}`);
-  if (tournament.roundDuration) lines.push(`Round : ${tournament.roundDuration}`);
-  if (tournament.breakInfo) lines.push(`Pause : ${tournament.breakInfo}`);
-  if (tournament.finalTable) lines.push(`Table finale : ${tournament.finalTable}`);
+  if (tournament.startingStack) lines.push(`${tournament.startingStack}`);
+  if (tournament.roundDuration) lines.push(`${tournament.roundDuration}`);
+  if (tournament.breakInfo) lines.push(`${tournament.breakInfo}`);
+  if (tournament.finalTable) lines.push(`${tournament.finalTable}`);
   return lines;
 }
 
