@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { addRegistrant, type RegisterError } from "@/lib/store";
 import { toPublicTournament, type RegistrantInput } from "@/lib/types";
 import { notify } from "@/lib/notify";
-import { isSiteAuthenticated } from "@/lib/site-access";
 
 const ERROR_MESSAGES: Record<RegisterError, { status: number; message: string }> = {
   not_found: { status: 404, message: "Tournoi introuvable." },
@@ -26,13 +25,6 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await isSiteAuthenticated())) {
-    return NextResponse.json(
-      { error: "Accès réservé. Veuillez saisir le mot de passe du club." },
-      { status: 401 }
-    );
-  }
-
   const { id } = await params;
   const body = (await request.json().catch(() => ({}))) as Partial<RegistrantInput>;
 
