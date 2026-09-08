@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Le Registre — Tournois de poker",
+  title: "Sundgau Poker Club",
   description:
     "Créez et gérez vos tournois de poker : inscriptions, places disponibles et affichage en cartes.",
 };
