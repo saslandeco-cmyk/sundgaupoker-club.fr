@@ -7,7 +7,7 @@ import { MenuIcon } from "./InfoIcons";
 
 const NAV_LINKS: { href: string; label: string; external?: boolean }[] = [
   { href: "https://sundgau-poker-club.fr/", label: "Accueil", external: true },
-  { href: "/tournois", label: "Tournois" },
+  { href: "https://sundgau-poker-club.fr/tous-les-tournois/", label: "Tournois" },
   {
     href: "https://sundgau-poker-club.fr/",
     label: "Le club",
