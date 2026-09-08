@@ -19,6 +19,11 @@ const ERROR_MESSAGES: Record<RegisterError, { status: number; message: string }>
     status: 409,
     message: "Cette personne est déjà inscrite à ce tournoi.",
   },
+  not_authorized: {
+    status: 403,
+    message:
+      "Cette adresse email n'est pas autorisée à s'inscrire. Contactez l'organisateur du club.",
+  },
 };
 
 export async function POST(

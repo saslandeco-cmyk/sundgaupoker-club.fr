@@ -12,6 +12,8 @@ const ERROR_MESSAGES: Record<RegisterError, string> = {
   offline_only: "L'inscription en ligne n'est pas activée pour ce tournoi.",
   invalid_input: "Le prénom, le nom et une adresse email valide sont obligatoires.",
   already_registered: "Cette personne est déjà inscrite à ce tournoi.",
+  not_authorized:
+    "Cette adresse email n'est pas autorisée à s'inscrire. Contactez l'organisateur du club.",
 };
 
 /**
