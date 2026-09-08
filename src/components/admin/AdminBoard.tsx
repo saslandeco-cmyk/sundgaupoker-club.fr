@@ -155,6 +155,12 @@ export function AdminBoard({
           >
             Gestion des inscrits
           </Link>
+          <Link
+            href="/admin/members"
+            className="rounded-sm border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-text-soft transition-colors hover:text-text"
+          >
+            Membres autorisés
+          </Link>
           <button
             type="button"
             onClick={() => setModalTarget("new")}
