@@ -79,6 +79,14 @@ async function ensureSchema(sql: Sql): Promise<void> {
     CREATE INDEX IF NOT EXISTS registrants_tournament_id_idx
       ON registrants (tournament_id)
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS authorized_members (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `;
 }
 
 /**

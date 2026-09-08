@@ -1,4 +1,5 @@
 import { getSql, isBuildPhase } from "./db";
+import { isEmailAuthorized } from "./members";
 import type {
   Registrant,
   RegistrantInput,
@@ -381,7 +382,8 @@ export type RegisterError =
   | "full"
   | "offline_only"
   | "invalid_input"
-  | "already_registered";
+  | "already_registered"
+  | "not_authorized";
 
 /** Normalise un nom pour comparaison : minuscules, sans accents, sans espaces superflus. */
 function normalizeName(value: string): string {
@@ -410,9 +412,14 @@ class RegistrationError extends Error {
 async function registerCore(
   tournamentId: string,
   data: { firstName: string; lastName: string; email: string; nickname?: string },
-  opts: { requireOnline: boolean }
+  opts: { requireOnline: boolean; requireAuthorizedEmail: boolean }
 ): Promise<{ tournament: Tournament; registrant: Registrant } | { error: RegisterError }> {
   await ensureSeeded();
+
+  if (opts.requireAuthorizedEmail && !(await isEmailAuthorized(data.email))) {
+    return { error: "not_authorized" };
+  }
+
   const sql = await getSql();
   try {
     return await sql.begin(async (tx) => {
@@ -483,7 +490,7 @@ export async function addRegistrant(
   return registerCore(
     tournamentId,
     { firstName, lastName, email, nickname },
-    { requireOnline: true }
+    { requireOnline: true, requireAuthorizedEmail: true }
   );
 }
 
@@ -506,7 +513,10 @@ export async function removeRegistrant(
   return mapTournamentRow(tournamentRow, registrantRows.map(mapRegistrantRow));
 }
 
-export type ManualRegisterError = Exclude<RegisterError, "offline_only">;
+export type ManualRegisterError = Exclude<
+  RegisterError,
+  "offline_only" | "not_authorized"
+>;
 
 /**
  * Inscription saisie par un administrateur : mêmes règles que l'inscription
@@ -536,9 +546,12 @@ export async function addManualRegistrant(
   const result = await registerCore(
     tournamentId,
     { firstName, lastName, email: email ?? "", nickname },
-    { requireOnline: false }
+    { requireOnline: false, requireAuthorizedEmail: false }
   );
-  // `requireOnline: false` garantit que "offline_only" ne peut pas survenir ici.
+  // `requireOnline: false` et `requireAuthorizedEmail: false` garantissent que
+  // "offline_only" et "not_authorized" ne peuvent pas survenir ici : un
+  // organisateur connecté fait autorité et n'a pas besoin que la personne
+  // figure dans la liste des membres autorisés.
   return result as
     | { tournament: Tournament; registrant: Registrant }
     | { error: ManualRegisterError };
