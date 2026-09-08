@@ -9,7 +9,7 @@ function tournamentSummaryLines(tournament: Tournament): string[] {
     `Date : ${date} à ${time}`,
     `Lieu : ${tournament.venue}`,
   ];
-  if (tournament.startTime) lines.push(`Début du tournoi : ${tournament.startTime}`);
+  if (tournament.startTime) lines.push(`${tournament.startTime}`);
   if (tournament.startingStack) lines.push(`Stack de départ : ${tournament.startingStack}`);
   if (tournament.roundDuration) lines.push(`Round : ${tournament.roundDuration}`);
   if (tournament.breakInfo) lines.push(`Pause : ${tournament.breakInfo}`);
