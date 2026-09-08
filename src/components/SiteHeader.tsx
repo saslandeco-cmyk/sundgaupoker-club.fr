@@ -144,6 +144,7 @@ export function SiteHeader({ active }: { active: "/tournois" | "/admin" }) {
             </nav>
           )}
         </div>
+      </div>
     </header>
   );
 }
