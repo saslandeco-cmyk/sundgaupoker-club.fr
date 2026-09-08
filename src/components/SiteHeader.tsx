@@ -144,16 +144,6 @@ export function SiteHeader({ active }: { active: "/tournois" | "/admin" }) {
             </nav>
           )}
         </div>
-
-        <Link
-          href="/admin"
-          className={`ml-auto text-sm underline-offset-4 hover:text-text hover:underline ${
-            active === "/admin" ? "text-accent" : "text-text-soft"
-          }`}
-        >
-          Espace organisateur
-        </Link>
-      </div>
     </header>
   );
 }
