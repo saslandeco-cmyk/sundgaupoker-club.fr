@@ -10,6 +10,7 @@ import { registerForTournamentAction } from "@/app/tournois/actions";
 import { SiteHeader } from "./SiteHeader";
 import { PublicTournamentCard } from "./PublicTournamentCard";
 import { RegistrationModal } from "./RegistrationModal";
+import { ArrowRightIcon } from "./InfoIcons";
 
 export function PublicBoard({
   initialTournaments,
@@ -51,10 +52,21 @@ export function PublicBoard({
     <div className="min-h-screen bg-bg">
       <SiteHeader active="/tournois" />
 
-      <div className="mx-auto max-w-6xl px-6 py-6 sm:px-8">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-6 sm:px-8">
         <p className="text-sm text-text-soft">
           {stats.openCount} tournoi{stats.openCount > 1 ? "s" : ""} à venir
         </p>
+
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-text-soft">Pas encore membre ?</span>
+          <a
+            href="https://sundgau-poker-club.fr/demande-dinscription/"
+            className="flex items-center gap-1.5 rounded-sm bg-accent px-4 py-2 text-sm font-bold text-text transition-colors hover:bg-accent-light"
+          >
+            C&apos;est par ici
+            <ArrowRightIcon className="h-4 w-4" />
+          </a>
+        </div>
       </div>
 
       <main className="mx-auto max-w-6xl px-6 pb-12 sm:px-8">
