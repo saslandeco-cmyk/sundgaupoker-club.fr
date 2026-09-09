@@ -98,6 +98,10 @@ supplémentaire n'est nécessaire, il suffit d'ouvrir le dossier puis de lancer
 
 - `/` redirige automatiquement vers `/tournois`, la page réellement affichée
   par l'onglet "Tournois" du menu.
+- Sous l'en-tête, la ligne "X tournois à venir" partage sa rangée avec un
+  appel à l'action **"Pas encore membre ? [C'est par ici →]"** aligné à
+  droite, qui renvoie vers
+  https://sundgau-poker-club.fr/demande-dinscription/ (même onglet).
 - Cette page porte une balise `<meta name="robots" content="noindex, nofollow">`
   (définie dans `src/app/tournois/page.tsx`) : les moteurs de recherche ne
   l'indexeront pas. C'est la méthode recommandée pour exclure une page
@@ -122,14 +126,29 @@ supplémentaire n'est nécessaire, il suffit d'ouvrir le dossier puis de lancer
   clé d'unicité ; une seconde tentative avec la même identité est refusée
   avec un message clair. Le pseudo, facultatif, n'est pas utilisé comme
   critère car il n'est pas toujours renseigné.
+- **Inscription réservée aux membres autorisés** : seules les adresses email
+  présentes dans la liste gérée par l'administrateur (`/admin/members`)
+  peuvent s'inscrire depuis la page publique. Une adresse absente de la
+  liste reçoit le message *"Cette adresse email n'est pas autorisée à
+  s'inscrire. Contactez l'organisateur du club."*. Tant que la liste est
+  vide, personne ne peut s'inscrire en ligne — l'administrateur doit
+  explicitement autoriser chaque personne. Cette règle ne s'applique **pas**
+  à l'inscription manuelle par un administrateur (voir plus bas) : un
+  organisateur connecté peut toujours inscrire n'importe qui, y compris une
+  personne hors liste.
 - Les noms des inscrits ne sont jamais exposés publiquement : l'API publique
   ne renvoie qu'un nombre de places prises, jamais l'identité des joueurs.
-- En-tête avec le logo du club et les onglets, tous reliés au site vitrine
-  réel du club (même onglet) : Accueil et Le club vers
+- En-tête avec le logo du club et les liens de navigation — tous reliés au
+  site vitrine réel du club (même onglet) : Accueil et Le club vers
   https://sundgau-poker-club.fr/, Tournois vers la page publique de cette
   application, Classement vers /classement/, Forum (en cours) vers /forum/,
   Devenir membre du club vers /demande-dinscription/, et Autres actualités
-  vers /actualites/. Un lien "Espace organisateur" mène au back office.
+  vers /actualites/. **Sur PC (≥ 1024px)**, ces liens s'affichent en ligne,
+  comme des onglets. **Sur mobile et tablette (< 1024px)**, ils sont
+  regroupés derrière un bouton **"Menu"** (icône hamburger) qui ouvre un
+  menu déroulant ; il se ferme au clic sur un lien, en cliquant ailleurs sur
+  la page, ou avec la touche Échap. Un lien "Espace
+  organisateur" (hors du menu) mène au back office.
 
 ### Back office (`/admin`)
 
@@ -154,6 +173,19 @@ supplémentaire n'est nécessaire, il suffit d'ouvrir le dossier puis de lancer
 - Toutes les routes de création/modification/duplication/suppression sont
   protégées côté serveur : un appel direct à l'API sans session valide
   renvoie une erreur 401.
+
+### Membres autorisés (`/admin/members`)
+
+- Tableau de la liste des personnes autorisées à s'inscrire en ligne
+  (email + nom facultatif, pour s'y retrouver), avec recherche.
+- **Ajouter un membre** : formulaire email + nom facultatif ; une adresse
+  déjà présente dans la liste est rejetée (message clair, pas de doublon
+  silencieux).
+- **Retirer un membre** : bouton "Retirer" sur chaque ligne — la personne ne
+  pourra alors plus s'inscrire tant qu'elle n'est pas de nouveau ajoutée.
+- Cette liste ne concerne que l'**inscription publique** ; elle n'affecte ni
+  la visibilité des tournois (toujours publique), ni la possibilité pour un
+  administrateur d'inscrire manuellement qui il souhaite.
 
 ### Gestion des inscrits (`/admin/registrants`)
 
@@ -192,16 +224,59 @@ envoyé : un message explicite apparaît dans les logs du serveur pour vous
 le rappeler. L'envoi d'email est un simple effet secondaire : un échec ou
 une lenteur SMTP ne fait jamais échouer l'inscription elle-même.
 
+#### La fonction `notify()`
+
+Toute la logique de notification est centralisée dans **`src/lib/notify.ts`**,
+une fonction serveur pure, sans dépendance à Next.js, appelable depuis
+**n'importe quelle Server Action** (ou Route Handler, ou script) :
+
+```ts
+"use server";
+import { notify } from "@/lib/notify";
+
+export async function maServerAction(/* ... */) {
+  // ... votre logique métier (créer/valider l'inscription, etc.) ...
+  await notify({ tournament, registrant });
+}
+```
+
+Elle renvoie `{ adminNotified: boolean, registrantNotified: boolean | null }`
+(`null` si la personne n'a pas d'email) et ne lève jamais d'exception : un
+souci SMTP est journalisé et reflété dans le résultat, jamais propagé à
+l'appelant.
+
+**Deux Server Actions concrètes l'utilisent déjà** dans l'application :
+
+- `src/app/tournois/actions.ts` → `registerForTournamentAction` : inscription
+  publique, appelée directement par `PublicBoard.tsx` (plus de `fetch()` côté
+  client vers une route API pour ce flux).
+- `src/app/admin/registrants/actions.ts` → `manualRegisterAction` : inscription
+  manuelle admin, appelée directement par `RegistrantsDashboard.tsx`. Comme
+  toute Server Action est un point d'entrée public au même titre qu'une route
+  API, elle revérifie elle-même la session admin (`isAdminAuthenticated()`)
+  au lieu de faire confiance à l'interface qui l'appelle.
+
+Les routes API historiques (`POST /api/tournaments/[id]/registrants` et
+`POST /api/admin/registrants`) existent toujours et appellent elles aussi
+`notify()` — utile si vous voulez garder une API HTTP classique en plus des
+Server Actions (intégration externe, tests, etc.).
+
 ## Structure du projet
 
 ```
 src/
   app/
     page.tsx                        Redirige "/" vers "/tournois"
-    tournois/page.tsx               Page publique (Server Component)
+    tournois/
+      page.tsx                       Page publique (Server Component)
+      actions.ts                     Server Action d'inscription publique
     admin/
       page.tsx                      Back office (protégé, redirige sinon)
-      registrants/page.tsx          Tableau de bord des inscrits (protégé)
+      members/
+        page.tsx                     Membres autorisés (protégé)
+      registrants/
+        page.tsx                     Tableau de bord des inscrits (protégé)
+        actions.ts                   Server Action d'inscription manuelle
     admin@403115/
       page.tsx                       Formulaire de connexion admin (URL
                                      volontairement peu devinable)
@@ -218,9 +293,12 @@ src/
                                                     inscription manuelle)
       admin/registrants/[registrantId]/route.ts    DELETE protégé
       admin/registrants/export/route.ts            GET protégé (export CSV)
+      admin/members/route.ts                       GET/POST protégés (liste,
+                                                    ajout d'un membre autorisé)
+      admin/members/[memberId]/route.ts            DELETE protégé
     layout.tsx / globals.css        Layout racine, polices, design tokens
   components/
-    SiteHeader.tsx                    Navigation sombre (logo, onglets, contact)
+    SiteHeader.tsx                    Navigation sombre (logo, menu déroulant, contact)
     PublicBoard.tsx / PublicTournamentCard.tsx      Vue publique (avec description)
     RegistrationModal.tsx                           Formulaire d'inscription
     InfoIcons.tsx                     Icônes ticket / places (lignes d'info)
@@ -229,14 +307,16 @@ src/
       AdminLoginForm.tsx / TournamentFormModal.tsx  Connexion / création+édition
       RegistrantsDashboard.tsx                      Tableau de bord des inscrits
       ManualRegistrationModal.tsx                   Formulaire d'inscription manuelle
+      MembersDashboard.tsx                          Gestion des membres autorisés
     SuitMark.tsx                     Icônes de couleurs (pique/cœur/…)
   lib/
     types.ts                         Types + statut + vue publique
     db.ts                             Connexion Postgres + création du schéma
     store.ts                         Requêtes SQL (tournois, inscrits)
+    members.ts                       CRUD de la liste des membres autorisés
     csv.ts                           Génération du CSV d'export des inscrits
     mailer.ts                        Envoi SMTP bas niveau (nodemailer)
-    notifications.ts                 Construction des emails admin/inscrit
+    notify.ts                        Fonction notify() (emails admin/inscrit)
     auth.ts                          Vérification mot de passe + session
     admin-guard.ts                   Garde d'accès pour les routes API admin
     format.ts                        Formatage dates/montants (fr-FR)
@@ -245,11 +325,12 @@ docker-compose.yml                   Postgres local pour le développement (opti
 
 ## Notes
 
-- **Base de données** : le schéma (deux tables, `tournaments` et
-  `registrants`, liées par une clé étrangère avec suppression en cascade) est
-  créé automatiquement au premier démarrage — aucune commande de migration à
-  lancer. Pour repartir de zéro, videz les deux tables ou pointez
-  `DATABASE_URL` vers une base vide.
+- **Base de données** : le schéma (`tournaments` et `registrants`, liées par
+  une clé étrangère avec suppression en cascade, plus `authorized_members`
+  pour la liste des personnes autorisées à s'inscrire) est créé
+  automatiquement au premier démarrage — aucune commande de migration à
+  lancer. Pour repartir de zéro, videz les tables ou pointez `DATABASE_URL`
+  vers une base vide.
 - **Sécurité contre la survente** : l'inscription (publique ou manuelle)
   verrouille la ligne du tournoi en base le temps de la transaction
   (`SELECT ... FOR UPDATE`) avant de vérifier les places disponibles et
