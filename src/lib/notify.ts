@@ -6,7 +6,7 @@ function tournamentSummaryLines(tournament: Tournament): string[] {
   const { date, time } = formatDateTime(tournament.date);
   const lines = [
     `Tournoi : ${tournament.name}`,
-    `Date : ${date} à ${time}`,
+    `Date : ${date}`,
     `Lieu : ${tournament.venue}`,
   ];
   if (tournament.startTime) lines.push(`${tournament.startTime}`);
