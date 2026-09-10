@@ -3,7 +3,7 @@ import { formatDateTime } from "./format";
 import { sendMail } from "./mailer";
 
 function tournamentSummaryLines(tournament: Tournament): string[] {
-  const { date, time } = formatDateTime(tournament.date);
+  const { date } = formatDateTime(tournament.date);
   const lines = [
     `Tournoi : ${tournament.name}`,
     `Date : ${date}`,
