@@ -6,6 +6,7 @@ import type { RegistrantInput, RegistrantWithTournament } from "@/lib/types";
 import { manualRegisterAction } from "@/app/admin/registrants/actions";
 import { SiteHeader } from "../SiteHeader";
 import { ManualRegistrationModal } from "./ManualRegistrationModal";
+import { EditRegistrantModal } from "./EditRegistrantModal";
 
 function formatDateTime(iso: string): string {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -23,6 +24,7 @@ export function RegistrantsDashboard({
 }) {
   const [registrants, setRegistrants] = useState(initialRegistrants);
   const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState<RegistrantWithTournament | null>(null);
   const [search, setSearch] = useState("");
   const [tournamentFilter, setTournamentFilter] = useState<string>("all");
 
@@ -57,6 +59,26 @@ export function RegistrantsDashboard({
       },
       ...prev,
     ]);
+  }
+
+  async function handleUpdate(
+    registrantId: string,
+    input: RegistrantInput
+  ): Promise<string | void> {
+    const res = await fetch(`/api/admin/registrants/${registrantId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return data.error ?? "Une erreur est survenue.";
+    }
+    setRegistrants((prev) =>
+      prev.map((r) =>
+        r.id === registrantId ? { ...r, ...data.registrant } : r
+      )
+    );
   }
 
   async function handleDelete(registrantId: string) {
@@ -173,13 +195,22 @@ export function RegistrantsDashboard({
                     {formatDateTime(r.createdAt)}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(r.id)}
-                      className="text-xs text-text-soft transition-colors hover:text-status-full"
-                    >
-                      Retirer
-                    </button>
+                    <div className="flex justify-end gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setEditing(r)}
+                        className="text-xs text-text-soft transition-colors hover:text-text"
+                      >
+                        Modifier
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(r.id)}
+                        className="text-xs text-text-soft transition-colors hover:text-status-full"
+                      >
+                        Retirer
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -193,6 +224,14 @@ export function RegistrantsDashboard({
           tournaments={tournaments}
           onClose={() => setShowModal(false)}
           onSubmit={handleManualRegister}
+        />
+      )}
+
+      {editing && (
+        <EditRegistrantModal
+          registrant={editing}
+          onClose={() => setEditing(null)}
+          onSubmit={(input) => handleUpdate(editing.id, input)}
         />
       )}
     </div>

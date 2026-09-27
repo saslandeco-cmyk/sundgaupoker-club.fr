@@ -563,6 +563,44 @@ export async function addManualRegistrant(
     | { error: ManualRegisterError };
 }
 
+export type UpdateRegistrantError = "not_found" | "invalid_input";
+
+/** Modifie les informations (nom, prénom, email, pseudo) d'un inscrit déjà
+ * enregistré, retrouvé par son seul identifiant. Utilisé par le tableau de
+ * bord global des inscrits. */
+export async function updateRegistrantById(
+  registrantId: string,
+  input: RegistrantInput
+): Promise<
+  | { tournamentId: string; registrant: Registrant }
+  | { error: UpdateRegistrantError }
+> {
+  await ensureSeeded();
+  const firstName = input.firstName?.trim();
+  const lastName = input.lastName?.trim();
+  const email = input.email?.trim().toLowerCase();
+  if (!firstName || !lastName) {
+    return { error: "invalid_input" };
+  }
+  if (email && !EMAIL_RE.test(email)) {
+    return { error: "invalid_input" };
+  }
+  const nickname = input.nickname?.trim() || buildDefaultNickname(firstName, lastName);
+
+  const sql = await getSql();
+  const [row] = await sql<RegistrantRow[]>`
+    UPDATE registrants SET
+      first_name = ${firstName},
+      last_name = ${lastName},
+      email = ${email ?? ""},
+      nickname = ${nickname}
+    WHERE id = ${registrantId}
+    RETURNING *
+  `;
+  if (!row) return { error: "not_found" };
+  return { tournamentId: row.tournament_id, registrant: mapRegistrantRow(row) };
+}
+
 /** Retire un inscrit en le retrouvant par son seul identifiant (utilisé par
  * le tableau de bord global des inscrits, qui ne connaît pas forcément le
  * tournoi concerné à l'avance). */
