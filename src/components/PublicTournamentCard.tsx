@@ -137,10 +137,7 @@ export function PublicTournamentCard({
             )}
             {tournament.registrants.map((r, i) => (
               <li key={i} className="px-3 py-2 text-sm text-text">
-                {r.firstName} {r.lastName}
-                {r.nickname && (
-                  <span className="text-text-soft"> — {r.nickname}</span>
-                )}
+                {r.nickname ?? `${r.firstName} ${r.lastName.charAt(0).toUpperCase()}.`}
               </li>
             ))}
           </ul>
