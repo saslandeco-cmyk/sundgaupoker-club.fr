@@ -20,7 +20,7 @@ const NAV_LINKS: { href: string; label: string; external?: boolean }[] = [
   },
   {
     href: "https://sundgau-poker-club.fr/forum/",
-    label: "Forum (en cours)",
+    label: "Forum",
     external: true,
   },
   {
