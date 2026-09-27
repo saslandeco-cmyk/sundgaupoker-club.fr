@@ -5,13 +5,28 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { MenuIcon } from "./InfoIcons";
 
-const NAV_LINKS: { href: string; label: string; external?: boolean }[] = [
+type NavLink = {
+  href: string;
+  label: string;
+  external?: boolean;
+  children?: { href: string; label: string }[];
+};
+
+const NAV_LINKS: NavLink[] = [
   { href: "https://sundgau-poker-club.fr/", label: "Accueil", external: true },
   { href: "/tournois", label: "Tournois" },
   {
     href: "https://sundgau-poker-club.fr/",
     label: "Le club",
     external: true,
+    children: [
+      { href: "https://sundgau-poker-club.fr/a-propos/", label: "À propos" },
+      {
+        href: "https://sundgau-poker-club.fr/partenaires/",
+        label: "Partenariats envisagés",
+      },
+      { href: "https://sundgau-poker-club.fr/documents/", label: "Documents" },
+    ],
   },
   {
     href: "https://sundgau-poker-club.fr/classement/",
@@ -57,7 +72,7 @@ export function SiteHeader({ active }: { active: "/tournois" | "/admin" }) {
     };
   }, [open]);
 
-  function navItemClass(link: (typeof NAV_LINKS)[number], variant: "inline" | "dropdown") {
+  function navItemClass(link: NavLink, variant: "inline" | "dropdown") {
     const isActive = link.href === active && link.label === "Tournois";
     if (variant === "inline") {
       return `border-b-2 pb-1 text-sm font-semibold text-text transition-opacity hover:opacity-80 ${
@@ -85,7 +100,26 @@ export function SiteHeader({ active }: { active: "/tournois" | "/admin" }) {
         {/* PC (lg et plus) : chaque lien affiché en ligne, comme avant. */}
         <nav className="hidden flex-wrap items-center gap-x-6 gap-y-2 lg:flex">
           {NAV_LINKS.map((link) =>
-            link.external ? (
+            link.children ? (
+              <div key={link.label} className="group relative">
+                <a href={link.href} className={navItemClass(link, "inline")}>
+                  {link.label}
+                </a>
+                <div className="invisible absolute top-full left-0 z-50 pt-2 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                  <div className="w-56 overflow-hidden rounded-md border border-[var(--border)] bg-surface py-1.5 shadow-xl">
+                    {link.children.map((child) => (
+                      <a
+                        key={child.label}
+                        href={child.href}
+                        className="block px-4 py-2.5 text-sm font-semibold text-text transition-colors hover:bg-[var(--surface-soft)]"
+                      >
+                        {child.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : link.external ? (
               <a
                 key={link.label}
                 href={link.href}
@@ -120,27 +154,37 @@ export function SiteHeader({ active }: { active: "/tournois" | "/admin" }) {
 
           {open && (
             <nav className="absolute top-full left-0 z-50 mt-2 w-64 overflow-hidden rounded-md border border-[var(--border)] bg-surface py-1.5 shadow-xl">
-              {NAV_LINKS.map((link) =>
-                link.external ? (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    className={navItemClass(link, "dropdown")}
-                    onClick={() => setOpen(false)}
-                  >
-                    {link.label}
-                  </a>
-                ) : (
-                  <Link
-                    key={link.label}
-                    href={link.href}
-                    className={navItemClass(link, "dropdown")}
-                    onClick={() => setOpen(false)}
-                  >
-                    {link.label}
-                  </Link>
-                )
-              )}
+              {NAV_LINKS.map((link) => (
+                <div key={link.label}>
+                  {link.external ? (
+                    <a
+                      href={link.href}
+                      className={navItemClass(link, "dropdown")}
+                      onClick={() => setOpen(false)}
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <Link
+                      href={link.href}
+                      className={navItemClass(link, "dropdown")}
+                      onClick={() => setOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  )}
+                  {link.children?.map((child) => (
+                    <a
+                      key={child.label}
+                      href={child.href}
+                      className="block px-8 py-2 text-sm text-text-soft transition-colors hover:bg-[var(--surface-soft)] hover:text-text"
+                      onClick={() => setOpen(false)}
+                    >
+                      {child.label}
+                    </a>
+                  ))}
+                </div>
+              ))}
             </nav>
           )}
         </div>
