@@ -394,6 +394,12 @@ function normalizeName(value: string): string {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
+/** Pseudo par défaut quand la personne n'en renseigne pas : son prénom suivi
+ * de l'initiale de son nom (ex. "Camille B."). */
+function buildDefaultNickname(firstName: string, lastName: string): string {
+  return `${firstName} ${lastName.charAt(0).toUpperCase()}.`;
+}
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 class RegistrationError extends Error {
@@ -483,10 +489,10 @@ export async function addRegistrant(
   const firstName = input.firstName?.trim();
   const lastName = input.lastName?.trim();
   const email = input.email?.trim().toLowerCase();
-  const nickname = input.nickname?.trim();
   if (!firstName || !lastName || !email || !EMAIL_RE.test(email)) {
     return { error: "invalid_input" };
   }
+  const nickname = input.nickname?.trim() || buildDefaultNickname(firstName, lastName);
   return registerCore(
     tournamentId,
     { firstName, lastName, email, nickname },
@@ -536,13 +542,13 @@ export async function addManualRegistrant(
   const firstName = input.firstName?.trim();
   const lastName = input.lastName?.trim();
   const email = input.email?.trim().toLowerCase();
-  const nickname = input.nickname?.trim();
   if (!firstName || !lastName) {
     return { error: "invalid_input" };
   }
   if (email && !EMAIL_RE.test(email)) {
     return { error: "invalid_input" };
   }
+  const nickname = input.nickname?.trim() || buildDefaultNickname(firstName, lastName);
   const result = await registerCore(
     tournamentId,
     { firstName, lastName, email: email ?? "", nickname },
