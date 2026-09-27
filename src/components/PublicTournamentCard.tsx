@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import type { PublicTournament } from "@/lib/types";
 import { getStatus, remainingSeats } from "@/lib/types";
@@ -25,9 +26,11 @@ export function PublicTournamentCard({
   tournament: PublicTournament;
   onOpenRegistration: () => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const status = getStatus(tournament);
   const remaining = remainingSeats(tournament);
   const canRegister = status === "upcoming" && tournament.onlineRegistration;
+  const registeredCount = tournament.registeredCount;
 
   return (
     <article className="rise-in flex flex-col overflow-hidden rounded-md border border-white bg-surface">
@@ -112,6 +115,36 @@ export function PublicTournamentCard({
               : `Il reste ${remaining} place${remaining > 1 ? "s" : ""} sur ${tournament.maxSeats}`}
           </span>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="self-start text-sm font-semibold text-accent underline-offset-4 hover:underline"
+        >
+          {expanded
+            ? "Masquer les inscrits"
+            : registeredCount > 0
+              ? `Voir les inscrits (${registeredCount})`
+              : "Aucun inscrit pour l'instant"}
+        </button>
+
+        {expanded && (
+          <ul className="flex flex-col divide-y divide-[var(--border)] rounded-sm border border-[var(--border)]">
+            {registeredCount === 0 && (
+              <li className="px-3 py-2 text-sm text-text-soft">
+                Personne ne s&apos;est encore inscrit.
+              </li>
+            )}
+            {tournament.registrants.map((r, i) => (
+              <li key={i} className="px-3 py-2 text-sm text-text">
+                {r.firstName} {r.lastName}
+                {r.nickname && (
+                  <span className="text-text-soft"> — {r.nickname}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {canRegister ? (

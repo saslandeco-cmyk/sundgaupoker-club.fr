@@ -56,7 +56,16 @@ export interface TournamentInput {
   onlineRegistration: boolean;
 }
 
-/** Version publique d'un tournoi : jamais les noms des inscrits, juste le compte. */
+/** Un inscrit tel qu'affiché côté front office : jamais l'email, juste de quoi
+ * l'identifier publiquement. */
+export interface PublicRegistrant {
+  firstName: string;
+  lastName: string;
+  nickname?: string;
+}
+
+/** Version publique d'un tournoi : le compte d'inscrits, et la liste des
+ * inscrits (nom, prénom, pseudo) sans jamais leur email. */
 export interface PublicTournament {
   id: string;
   name: string;
@@ -71,6 +80,7 @@ export interface PublicTournament {
   maxSeats: number;
   onlineRegistration: boolean;
   registeredCount: number;
+  registrants: PublicRegistrant[];
   createdAt: string;
 }
 
@@ -109,6 +119,11 @@ export function toPublicTournament(t: Tournament): PublicTournament {
     maxSeats: t.maxSeats,
     onlineRegistration: t.onlineRegistration,
     registeredCount: t.registrants.length,
+    registrants: t.registrants.map((r) => ({
+      firstName: r.firstName,
+      lastName: r.lastName,
+      ...(r.nickname ? { nickname: r.nickname } : {}),
+    })),
     createdAt: t.createdAt,
   };
 }
