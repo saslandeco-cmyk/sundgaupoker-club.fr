@@ -23,10 +23,12 @@ export function AdminBoard({
   const [modalTarget, setModalTarget] = useState<ModalTarget>(null);
   const [loggingOut, setLoggingOut] = useState(false);
 
+  // Ordre de création (et non la date du tournoi) : un nouveau tournoi
+  // apparaît toujours en dernière position, à la suite des autres.
   const sorted = useMemo(
     () =>
       [...tournaments].sort(
-        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       ),
     [tournaments]
   );
